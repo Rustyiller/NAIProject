@@ -1,12 +1,33 @@
 import cv2
 import numpy as np
 
+
 face_cascade = cv2.CascadeClassifier('casscades/data/haarcascade_frontalface_alt2.xml')
 eye_cascade = cv2.CascadeClassifier('casscades/data/haarcascade_eye.xml')
 #ustawienie śledzenia obrazu z kamery
 cap = cv2.VideoCapture(0)
 low_boundary_blue = np.array([90, 140, 30])
 high_boundary_blue = np.array([150, 320, 270])
+
+img1 = cv2.imread("eyes.png", 0)
+img2 = cv2.imread("ears.png", 0)
+
+def add_transparent_image(bg, ov, x, y):
+    x -= int(ov.shape[0] / 2)
+    y -= int(ov.shape[1] / 2)
+    w = x + ov.shape[0]
+    h = y + ov.shape[1]
+
+    alpha_ov = ov[:, :, 3] / 255.0
+
+    alpha_bg = 1.0 - alpha_ov
+
+    for c in range(0, 3):
+        try:
+            bg[x:w, y:h, c] = (ov[:, :, c] * alpha_ov + bg[x:w, y:h, c] * alpha_bg)
+        except:
+            pass
+
 
 while True:
 
@@ -24,12 +45,13 @@ while True:
 
     for (x,y,w,h) in faces:
        cv2.rectangle(frame, (x,y), (x+w, y+h), (120,200,200), 2)
+       #add_transparent_image(frame,img2,x,y)
        roi_gray = gray[y:y+h, x:x+w]
        roi_color = frame[y:y+h, x:x+w]
-
        eyes = eye_cascade.detectMultiScale(roi_gray)
        for (ex, ey, ew, eh) in eyes:
            cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
+
 
     if len(contours) > 0:
 
